@@ -1,48 +1,52 @@
 import express from "express"
 import { registerController , addmarks, result, addsubjects, dashboard, studentdetails, searchstudent, getStudentSubjects, updatestudent } from "../controllers/authControllers.js";
 
-// import multer from "multer";
-// import path from "path";
-// import studentModel from "../models/studentModel.js";
-
-
- 
-const app = express();
 const router=express.Router()
+
+import multer from 'multer';
+import path from 'path';
+import studentModel from "../models/studentModel.js";
+
+const app = express();
+
+
 app.use(express.json());
-// app.use("/files", express.static("files"));
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, "./files");
-//   },
-//   filename: function (req, file, cb) {
-//     const uniqueSuffix = Date.now();
-//     cb(null, uniqueSuffix + file.originalname);
-//   },
-// });
 
 
-// const upload = multer({ storage: storage });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+app.post('/upload-assignment/:registrationNumber', upload.single('pdf'), async (req, res) => {
+  try {
+    const { registrationNumber } = req.params;
+    const { filename, path } = req.file;
+
+    const student = await studentModel.findOne({ registrationNumber:registrationNumber.toUpperCase() });
+    if (!student) {
+      return res.status(404).json({ success: false, msg: 'Student not found' });
+    }
+
+    student.assignment.push({ filename, path });
+    await student.save();
+
+    res.status(200).json({ success: true, msg: 'Assignment uploaded successfully', filename, path });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, msg: 'Internal server error' });
+  }
+});
 
 
-// app.post("/upload-files", upload.single("file"), async (req, res) => {
-//   console.log(req.file);
-//   const title = req.body.title;
-//   const fileName = req.file.filename;
-//   try {
-//     await PdfSchema.create({ title: title, pdf: fileName });
-//     res.send({ status: "ok" });
-//   } catch (error) {
-//     res.json({ status: error });
-//   }
-// });
-// app.get("/get-files", async (req, res) => {
-//   try {
-//     PdfSchema.find({}).then((data) => {
-//       res.send({ status: "ok", data: data });
-//     });
-//   } catch (error) {}
-// });
+
 
 router.post('/registerstudent',registerController)
 router.post('/addmarks',addmarks)
