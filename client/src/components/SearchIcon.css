@@ -1,0 +1,27 @@
+/* SearchIcon.css */
+
+.search-icon-container {
+    position: relative;
+  }
+  
+  .search-icon {
+    font-size: 24px;
+    cursor: pointer;
+    transition: font-size 0.3s;
+  }
+  
+  .expanded {
+    .search-icon {
+      font-size: 18px;
+    }
+  
+    form {
+      display: flex;
+      align-items: center;
+    }
+  
+    input {
+      margin-left: 5px;
+    }
+  }
+  
